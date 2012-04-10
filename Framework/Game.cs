@@ -12,17 +12,16 @@ namespace Gamefloor.Framework
     public class Game
     {
         #region Lifecycle
-        private NativeWindow m_window;
-
         public Game(int width, int height, String title, GameWindowFlags options, GraphicsMode mode, DisplayDevice device)
         {
-            // widow thread
-            m_window = new OpenTK.NativeWindow(width, height, title, options, mode, device);
+            // window thread
+            m_window = new NativeWindow(width, height, title, options, mode, device);
             m_renderables = new List<IRenderable>();
             m_components = new List<IGameComponent>();
             m_context = new GraphicsContext(mode, m_window.WindowInfo);
 
             m_window.Closing += window_Exiting;
+            SetupWindow();
             m_window.Visible = true;
         }
 
@@ -75,6 +74,15 @@ namespace Gamefloor.Framework
 
             m_running = true;
             m_thread.Start();
+        }
+
+        private NativeWindow m_window;
+        protected NativeWindow Window
+        {
+            get
+            {
+                return m_window;
+            }
         }
 
         protected virtual void SetupWindow()
