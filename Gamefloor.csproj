@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Framework\Game.cs" />
+    <Compile Include="Framework\GameComponent.cs" />
     <Compile Include="Framework\GameMode.cs" />
     <Compile Include="Framework\IGameComponent.cs" />
     <Compile Include="Framework\IRenderable.cs" />

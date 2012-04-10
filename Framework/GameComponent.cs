@@ -29,6 +29,7 @@ namespace Gamefloor.Framework
         }
         #endregion
 
+        #region State
         public void Show()
         {
             Game.Renderables.Add(this);
@@ -74,6 +75,7 @@ namespace Gamefloor.Framework
                 else Stop();
             }
         }
+        #endregion
 
         #region IRenderable implementation
         public virtual void Render(IGraphicsContext context)
