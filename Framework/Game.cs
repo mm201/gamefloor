@@ -17,7 +17,7 @@ namespace Gamefloor.Framework
             m_renderables = new List<IRenderable>();
         }
 
-        public sealed void Run()
+        public void Run()
         {
             Run(false);
         }
@@ -91,7 +91,7 @@ namespace Gamefloor.Framework
             }
         }
 
-        public sealed void NextFrame()
+        public void NextFrame()
         {
             UpdateComponents();
             Render();
@@ -99,7 +99,7 @@ namespace Gamefloor.Framework
             Context.SwapBuffers();
         }
 
-        public sealed void Wait(int frames)
+        public void Wait(int frames)
         {
             for (int x = 0; x < frames; x++) NextFrame();
         }

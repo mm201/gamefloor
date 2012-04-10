@@ -23,7 +23,7 @@ namespace Gamefloor.Framework
             }
         }
 
-        public sealed void Run()
+        public void Run()
         {
             m_game.Renderables.Add(this);
             Begin();
@@ -34,7 +34,7 @@ namespace Gamefloor.Framework
         {
         }
 
-        public virtual void Render(GraphicsContext context)
+        public virtual void Render(IGraphicsContext context)
         {
         }
 

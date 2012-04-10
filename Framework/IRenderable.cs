@@ -9,7 +9,7 @@ namespace Gamefloor.Framework
 {
     public interface IRenderable
     {
-        public void Render(IGraphicsContext context);
-        public Priority DrawOrder { get; }
+        void Render(IGraphicsContext context);
+        Priority DrawOrder { get; }
     }
 }

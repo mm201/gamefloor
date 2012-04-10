@@ -5,9 +5,9 @@ using Gamefloor.Support;
 
 namespace Gamefloor.Framework
 {
-    interface IGameComponent
+    public interface IGameComponent
     {
-        public void Update(bool RenderableFrame);
-        public Priority ProcessOrder { get; }
+        void Update(bool RenderableFrame);
+        Priority ProcessOrder { get; }
     }
 }
