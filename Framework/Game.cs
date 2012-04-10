@@ -16,6 +16,7 @@ namespace Gamefloor.Framework
 
         public Game(int width, int height, String title, GameWindowFlags options, GraphicsMode mode, DisplayDevice device)
         {
+            // widow thread
             m_window = new OpenTK.NativeWindow(width, height, title, options, mode, device);
             m_renderables = new List<IRenderable>();
             m_components = new List<IGameComponent>();
@@ -38,11 +39,13 @@ namespace Gamefloor.Framework
 
         public void Run()
         {
+            // window thread == game thread
             Run(false);
         }
 
         private void Run(bool async)
         {
+            // game thread
             m_running = true;
             m_async = async;
             try
@@ -57,6 +60,7 @@ namespace Gamefloor.Framework
 
         protected virtual void Begin()
         {
+            // game thread
             // override this and place your entire game lifecycle within.
         }
 
@@ -73,9 +77,15 @@ namespace Gamefloor.Framework
             m_thread.Start();
         }
 
+        protected virtual void SetupWindow()
+        {
+            // window thread
+            // initial call to set window things like icon, ...
+        }
+
         private void window_Exiting(object sender, CancelEventArgs e)
         {
-            // main thread
+            // window thread
             e.Cancel = Exit();
         }
 
@@ -84,7 +94,7 @@ namespace Gamefloor.Framework
 
         public bool Exit()
         {
-            // main thread
+            // window thread
             m_exiting = true;
             while (m_running && m_exiting)
             {
@@ -157,6 +167,9 @@ namespace Gamefloor.Framework
             Render();
 
             Context.SwapBuffers();
+
+            // keep windows message loop going always
+            if (!m_async) m_window.ProcessEvents();
         }
 
         public void Wait(int frames)
