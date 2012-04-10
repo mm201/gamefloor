@@ -6,8 +6,9 @@ using Gamefloor.Support;
 
 namespace Gamefloor.Framework
 {
-    class GameMode : IRenderable
+    public class GameMode : IRenderable, IGameComponent
     {
+        #region Lifecycle
         private Game m_game;
 
         public GameMode(Game game)
@@ -26,14 +27,19 @@ namespace Gamefloor.Framework
         public void Run()
         {
             m_game.Renderables.Add(this);
+            m_game.Components.Add(this);
             Begin();
             m_game.Renderables.Remove(this);
+            m_game.Components.Remove(this);
         }
 
         protected virtual void Begin()
         {
+            // override this and place the entire lifecycle of this mode within
         }
+        #endregion
 
+        #region IRenderable implementation
         public virtual void Render(IGraphicsContext context)
         {
         }
@@ -45,5 +51,20 @@ namespace Gamefloor.Framework
                 return new Priority(0, 0, 0, 0);
             }
         }
+        #endregion
+
+        #region IGameComponent implementation
+        public virtual void Update(bool RenderableFrame)
+        {
+        }
+
+        public virtual Priority ProcessOrder
+        {
+            get
+            {
+                return new Priority(0, 0, 0, 0);
+            }
+        }
+        #endregion
     }
 }

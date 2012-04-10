@@ -5,16 +5,35 @@ using System.Threading;
 using OpenTK;
 using OpenTK.Graphics;
 using Gamefloor.Support;
+using System.ComponentModel;
 
 namespace Gamefloor.Framework
 {
     public class Game
     {
         #region Lifecycle
+        private NativeWindow m_window;
 
-        public Game()
+        public Game(int width, int height, String title, GameWindowFlags options, GraphicsMode mode, DisplayDevice device)
+        {
+            m_window = new OpenTK.NativeWindow(width, height, title, options, mode, device);
+            m_renderables = new List<IRenderable>();
+            m_components = new List<IGameComponent>();
+            m_context = new GraphicsContext(mode, m_window.WindowInfo);
+
+            m_window.Closing += window_Exiting;
+            m_window.Visible = true;
+        }
+
+        public Game(GLControl control)
         {
             m_renderables = new List<IRenderable>();
+            m_components = new List<IGameComponent>();
+            m_context = control.Context;
+        }
+
+        public Game(int width, int height, String title) : this(width, height, title, GameWindowFlags.Default, GraphicsMode.Default, DisplayDevice.Default)
+        {
         }
 
         public void Run()
@@ -26,7 +45,13 @@ namespace Gamefloor.Framework
         {
             m_running = true;
             m_async = async;
-            Begin();
+            try
+            {
+                Begin();
+            }
+            catch (GamefloorExitingException)
+            {
+            }
             m_running = false;
         }
 
@@ -44,8 +69,34 @@ namespace Gamefloor.Framework
                 Run(true);
             });
 
+            m_running = true;
             m_thread.Start();
         }
+
+        private void window_Exiting(object sender, CancelEventArgs e)
+        {
+            // main thread
+            e.Cancel = Exit();
+        }
+
+        // raised in game thread
+        protected event EventHandler<CancelEventArgs> Exiting;
+
+        public bool Exit()
+        {
+            // main thread
+            m_exiting = true;
+            while (m_running && m_exiting)
+            {
+                // hang the main thread while the game thread decides whether to exit or not
+            }
+
+            bool result = m_exiting;
+            m_exiting = false;
+            return result;
+        }
+
+        private bool m_exiting = false;
 
         private bool m_running = false;
         public bool Running
@@ -93,6 +144,15 @@ namespace Gamefloor.Framework
 
         public void NextFrame()
         {
+            if (m_exiting)
+            {
+                CancelEventArgs e = new CancelEventArgs();
+                if (Exiting != null) Exiting(this, e);
+
+                if (m_exiting = !e.Cancel) // single = to assign m_exiting and finish the exit
+                    throw new GamefloorExitingException(); // plzzzz don't catch this or your game will hang. Use the event to cancel exiting
+            }
+
             UpdateComponents();
             Render();
 
@@ -102,6 +162,11 @@ namespace Gamefloor.Framework
         public void Wait(int frames)
         {
             for (int x = 0; x < frames; x++) NextFrame();
+        }
+
+        public void ProcessEvents()
+        {
+            m_window.ProcessEvents();
         }
 
         #endregion
@@ -133,12 +198,12 @@ namespace Gamefloor.Framework
 
         #region Graphics
 
-        private GameWindow m_game_window;
+        private IGraphicsContext m_context;
         protected IGraphicsContext Context
         {
             get
             {
-                return m_game_window.Context;
+                return m_context;
             }
         }
 
@@ -151,12 +216,20 @@ namespace Gamefloor.Framework
             }
         }
 
+        private bool m_loaded = false;
+
         private void Render()
         {
             AssertHelper.Assert(m_renderables != null, "Game.m_renderables is null.");
             if (m_renderables == null) return;
 
             m_renderables.Sort((x, y) => (x.DrawOrder.CompareTo(y.DrawOrder)));
+            m_context.MakeCurrent(m_window.WindowInfo);
+            if (!m_loaded)
+            {
+                m_context.LoadAll();
+                m_loaded = true;
+            }
             foreach (IRenderable r in m_renderables)
             {
                 r.Render(Context);
@@ -164,8 +237,6 @@ namespace Gamefloor.Framework
         }
 
         #endregion
-
-        
     }
 
     public enum TimingModes
