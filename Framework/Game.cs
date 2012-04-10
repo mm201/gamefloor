@@ -25,13 +25,6 @@ namespace Gamefloor.Framework
             m_window.Visible = true;
         }
 
-        public Game(GLControl control)
-        {
-            m_renderables = new List<IRenderable>();
-            m_components = new List<IGameComponent>();
-            m_context = control.Context;
-        }
-
         public Game(int width, int height, String title) : this(width, height, title, GameWindowFlags.Default, GraphicsMode.Default, DisplayDevice.Default)
         {
         }
