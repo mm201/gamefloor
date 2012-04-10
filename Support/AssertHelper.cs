@@ -10,9 +10,7 @@ namespace Gamefloor.Support
     {
         public static void Assert(bool condition, String message)
         {
-            Debug.Assert(condition, message);
-
-            try
+            if (!condition) try
             {
                 using (StreamWriter s = File.CreateText("assert.log"))
                 {
@@ -29,6 +27,8 @@ namespace Gamefloor.Support
             {
                 // directory not found or no write permissions there
             }
+
+            Debug.Assert(condition, message);
         }
     }
 }
