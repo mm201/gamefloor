@@ -6,6 +6,10 @@ using Gamefloor.Support;
 
 namespace Gamefloor.Framework
 {
+    /// <summary>
+    /// A GameMode assumes full control when it launches and only returns when the mode's
+    /// execution concludes.
+    /// </summary>
     public class GameMode : IRenderable, IGameComponent
     {
         #region Lifecycle
