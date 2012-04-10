@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>e28e93e9-1359-41f4-a6a2-82dcb9090102</ProjectGuid>
+    <ProjectGuid>{6DE14D20-FFFE-4C87-B9FA-E5DD2ECA376D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Gamefloor</RootNamespace>
@@ -31,13 +31,21 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="OpenTK, Version=1.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="Framework\Game.cs" />
+    <Compile Include="Framework\GameMode.cs" />
+    <Compile Include="Framework\IGameComponent.cs" />
+    <Compile Include="Framework\IRenderable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Support\AssertHelper.cs" />
+    <Compile Include="Support\Common.cs" />
+    <Compile Include="Support\Indexer1d.cs" />
+    <Compile Include="Support\Priority.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
