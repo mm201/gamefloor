@@ -50,6 +50,11 @@ namespace Gamefloor.Framework
             // game thread
             m_running = true;
             m_async = async;
+
+            m_context.MakeCurrent(m_window.WindowInfo);
+            m_context.LoadAll();
+            m_context.VSync = m_vsync;
+
             try
             {
                 Begin();
@@ -191,6 +196,20 @@ namespace Gamefloor.Framework
         public void ProcessEvents()
         {
             m_window.ProcessEvents();
+        }
+
+        private bool m_vsync;
+        public bool Vsync
+        {
+            get
+            {
+                return m_vsync;
+            }
+            set
+            {
+                m_vsync = value;
+                if (m_context != null) m_context.VSync = value;
+            }
         }
 
         #endregion
