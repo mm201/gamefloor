@@ -168,6 +168,16 @@ namespace Gamefloor.Framework
             }
         }
 
+        private bool m_has_input = false;
+        public void WaitForInput()
+        {
+            if (m_has_input) return;
+            // todo: low latency stuff goes here.
+            // for now, this is safe doing nothing
+
+            m_has_input = true;
+        }
+
         public void NextFrame()
         {
             if (m_exiting)
@@ -179,10 +189,16 @@ namespace Gamefloor.Framework
                     throw new GamefloorExitingException(); // plzzzz don't catch this or your game will hang. Use the event to cancel exiting
             }
 
+            // todo: figure out some voodoo to make multiple updates happen per render when fps > refresh rate
+            // and multiple renders (or idle time) happen when fps < refresh rate.
+            // at present, refresh rate overrides fps unconditionally.
+            WaitForInput();
             UpdateComponents();
             Render();
 
             Context.SwapBuffers();
+            // todo: replace prev input with cur input once input stuff is done
+            m_has_input = false;
 
             // keep windows message loop going always
             if (!m_async) m_window.ProcessEvents();
