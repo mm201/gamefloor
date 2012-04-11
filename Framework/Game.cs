@@ -12,10 +12,24 @@ namespace Gamefloor.Framework
     public class Game
     {
         #region Lifecycle
-        public Game(int width, int height, String title, GameWindowFlags options, GraphicsMode mode, DisplayDevice device)
+        public Game(int width, int height, String title)
+        {
+            DisplayDevice device = DisplayDevice.Default;
+            int x = device.Bounds.Left + (device.Bounds.Width - width) / 2;
+            int y = device.Bounds.Top + (device.Bounds.Height - height) / 2;
+
+            Init(x, y, width, height, title, GameWindowFlags.Default, GraphicsMode.Default, device);
+        }
+
+        public Game(int x, int y, int width, int height, String title, bool vsync, int fps)
+        {
+
+        }
+
+        private void Init(int x, int y, int width, int height, String title, GameWindowFlags options, GraphicsMode mode, DisplayDevice device)
         {
             // window thread
-            m_window = new NativeWindow(width, height, title, options, mode, device);
+            m_window = new NativeWindow(x, y, width, height, title, options, mode, device);
             m_renderables = new List<IRenderable>();
             m_components = new List<IGameComponent>();
             m_context = new GraphicsContext(mode, m_window.WindowInfo);
@@ -23,10 +37,6 @@ namespace Gamefloor.Framework
             m_window.Closing += window_Exiting;
             SetupWindow();
             m_window.Visible = true;
-        }
-
-        public Game(int width, int height, String title) : this(width, height, title, GameWindowFlags.Default, GraphicsMode.Default, DisplayDevice.Default)
-        {
         }
 
         public void Run()
