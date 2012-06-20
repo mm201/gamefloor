@@ -17,19 +17,25 @@ namespace Gamefloor.Framework
             DisplayDevice device = DisplayDevice.Default;
             int x = device.Bounds.Left + (device.Bounds.Width - width) / 2;
             int y = device.Bounds.Top + (device.Bounds.Height - height) / 2;
+            m_vsync = true;
+            m_fps = 60;
 
             Init(x, y, width, height, title, GameWindowFlags.Default, GraphicsMode.Default, device);
         }
 
-        public Game(int x, int y, int width, int height, String title, bool vsync, int fps)
+        public Game(int x, int y, int width, int height, String title, bool vsync, int fps, bool fullscreen, GraphicsMode mode, DisplayDevice display)
         {
+            m_vsync = true;// vsync;
+            m_fps = 60;// fps;
 
+            Init(x, y, width, height, title, fullscreen ? GameWindowFlags.Fullscreen : GameWindowFlags.Default, mode, display ?? DisplayDevice.Default);
+            m_window.WindowState = WindowState.Fullscreen;
         }
 
-        private void Init(int x, int y, int width, int height, String title, GameWindowFlags options, GraphicsMode mode, DisplayDevice device)
+        private void Init(int x, int y, int width, int height, String title, GameWindowFlags options, GraphicsMode mode, DisplayDevice display)
         {
             // window thread
-            m_window = new NativeWindow(x, y, width, height, title, options, mode, device);
+            m_window = new NativeWindow(x, y, width, height, title, options, mode, display);
             m_renderables = new List<IRenderable>();
             m_components = new List<IGameComponent>();
             m_context = new GraphicsContext(mode, m_window.WindowInfo);
@@ -164,7 +170,7 @@ namespace Gamefloor.Framework
             }
             set
             {
-                m_fps = value;
+                //m_fps = value;
             }
         }
 
@@ -190,7 +196,7 @@ namespace Gamefloor.Framework
             }
 
             // todo: figure out some voodoo to make multiple updates happen per render when fps > refresh rate
-            // and multiple renders (or idle time) happen when fps < refresh rate.
+            // and multiple renders (or idle time, preferably) happen when fps < refresh rate.
             // at present, refresh rate overrides fps unconditionally.
             WaitForInput();
             UpdateComponents();
@@ -223,8 +229,8 @@ namespace Gamefloor.Framework
             }
             set
             {
-                m_vsync = value;
-                if (m_context != null) m_context.VSync = value;
+                //m_vsync = value;
+                //if (m_context != null) m_context.VSync = value;
             }
         }
 
