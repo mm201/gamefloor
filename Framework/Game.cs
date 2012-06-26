@@ -48,6 +48,7 @@ namespace Gamefloor.Framework
         public void Run()
         {
             // window thread == game thread
+            m_thread = Thread.CurrentThread;
             Run(false);
         }
 
@@ -118,14 +119,27 @@ namespace Gamefloor.Framework
         {
             // window thread
             m_exiting = true;
-            while (m_running && m_exiting)
+            if (this.Thread == Thread.CurrentThread) PrepareToExit();
+            else
             {
-                // hang the main thread while the game thread decides whether to exit or not
+                while (m_running && m_exiting)
+                {
+                    // hang the main thread while the game thread decides whether to exit or not
+                }
             }
 
             bool result = m_exiting;
             m_exiting = false;
             return result;
+        }
+
+        private void PrepareToExit()
+        {
+            CancelEventArgs e = new CancelEventArgs();
+            if (Exiting != null) Exiting(this, e);
+
+            if (m_exiting = !e.Cancel) // single = to assign m_exiting and finish the exit
+                throw new GamefloorExitingException(); // plzzzz don't catch this or your game will hang. Use the event to cancel exiting
         }
 
         private bool m_exiting = false;
@@ -153,7 +167,7 @@ namespace Gamefloor.Framework
         {
             get
             {
-                return Thread.CurrentThread;
+                return m_thread;
             }
         }
 
@@ -186,14 +200,7 @@ namespace Gamefloor.Framework
 
         public void NextFrame()
         {
-            if (m_exiting)
-            {
-                CancelEventArgs e = new CancelEventArgs();
-                if (Exiting != null) Exiting(this, e);
-
-                if (m_exiting = !e.Cancel) // single = to assign m_exiting and finish the exit
-                    throw new GamefloorExitingException(); // plzzzz don't catch this or your game will hang. Use the event to cancel exiting
-            }
+            if (m_exiting) PrepareToExit();
 
             // todo: figure out some voodoo to make multiple updates happen per render when fps > refresh rate
             // and multiple renders (or idle time, preferably) happen when fps < refresh rate.
