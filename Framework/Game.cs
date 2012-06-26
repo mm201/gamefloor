@@ -92,7 +92,7 @@ namespace Gamefloor.Framework
         }
 
         private NativeWindow m_window;
-        protected NativeWindow Window
+        public NativeWindow Window
         {
             get
             {
@@ -271,7 +271,7 @@ namespace Gamefloor.Framework
         #region Graphics
 
         private IGraphicsContext m_context;
-        protected IGraphicsContext Context
+        public IGraphicsContext Context
         {
             get
             {
