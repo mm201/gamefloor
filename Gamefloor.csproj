@@ -46,12 +46,19 @@
     <Compile Include="Framework\IRenderable.cs" />
     <Compile Include="Graphics\Texture2D.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Graphics\LoadingTexture.cs" />
+    <Compile Include="Graphics\TextureInfo.cs" />
+    <Compile Include="Graphics\TextureAtlas.cs" />
+    <Compile Include="Graphics\AtlasBuilder.cs" />
     <Compile Include="Support\AssertHelper.cs" />
     <Compile Include="Support\Common.cs" />
     <Compile Include="Support\GamefloorException.cs" />
     <Compile Include="Framework\GamefloorExitingException.cs" />
     <Compile Include="Support\Indexer1d.cs" />
     <Compile Include="Support\Priority.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Sprites\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
