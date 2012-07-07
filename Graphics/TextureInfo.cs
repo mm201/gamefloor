@@ -10,13 +10,15 @@ namespace Gamefloor.Graphics
     /// </summary>
     public struct TextureInfo
     {
-        public TextureInfo(String name, double left, double top, double right, double bottom, PaddingFill padding_fill, TexelPosition texel_position, Color padding_colour)
+        public TextureInfo(String name, double left, double top, double right, double bottom, int width, int height, PaddingFill padding_fill, TexelPosition texel_position, Color padding_colour)
         {
             Name = name;
             Left = left;
             Top = top;
             Right = right;
             Bottom = bottom;
+            Width = width;
+            Height = height;
             PaddingFill = padding_fill;
             TexelPosition = texel_position;
             PaddingColour = padding_colour;
@@ -42,6 +44,16 @@ namespace Gamefloor.Graphics
         /// Bottom texel coordinate on the [0, 1) range
         /// </summary>
         public double Bottom;
+        /// <summary>
+        /// Pixel width of the underlying texture.
+        /// (Doesn't relate to Left/Top/Right/Bottom)
+        /// </summary>
+        public int Width;
+        /// <summary>
+        /// Pixel height of the underlying texture.
+        /// (Doesn't relate to Left/Top/Right/Bottom)
+        /// </summary>
+        public int Height;
         /// <summary>
         /// Padding fill rule provided when the sheet was constructed
         /// </summary>

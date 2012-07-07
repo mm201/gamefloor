@@ -53,7 +53,7 @@ namespace Gamefloor.Graphics
             foreach (LoadingTexture l in m_textures)
             {
                 g.DrawImage(l.Bitmap, new Rectangle(progress, 0, l.Bitmap.Width, l.Bitmap.Height));
-                elements.Add(new TextureInfo(l.Name, (double)progress / width, 0, (double)(progress + l.Bitmap.Width) / width, 1.0d, l.PaddingFill, l.TexelPosition, l.PaddingColour));
+                elements.Add(new TextureInfo(l.Name, (double)progress / width, 0, (double)(progress + l.Bitmap.Width) / width, 1.0d, l.Bitmap.Width, l.Bitmap.Height, l.PaddingFill, l.TexelPosition, l.PaddingColour));
                 progress += l.Bitmap.Width;
             }
 
