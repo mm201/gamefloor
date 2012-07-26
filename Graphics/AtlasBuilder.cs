@@ -60,6 +60,10 @@ namespace Gamefloor.Graphics
             return new TextureAtlas(b, game, elements);
         }
 
+        private void MakeAdjacentBorder(System.Drawing.Graphics dest, Bitmap src, int x, int y)
+        {
+        }
+
         private List<LoadingTexture> m_textures;
 
         public bool RequirePot { get; set; }
@@ -74,6 +78,28 @@ namespace Gamefloor.Graphics
             {
                 return m_textures;
             }
+        }
+
+        private struct IntermediateTexture
+        {
+            public IntermediateTexture(LoadingTexture loading_texture, int x, int y)
+            {
+                this.LoadingTexture = loading_texture;
+                X = x;
+                Y = y;
+                CorrectedWidth = loading_texture.PaddingFill == PaddingFill.None ? loading_texture.Bitmap.Width : loading_texture.Bitmap.Width + 2;
+                CorrectedHeight = loading_texture.PaddingFill == PaddingFill.None ? loading_texture.Bitmap.Height : loading_texture.Bitmap.Height + 2;
+                Area = CorrectedWidth * CorrectedHeight;
+            }
+
+            public IntermediateTexture(LoadingTexture loading_texture)
+                : this(loading_texture, 0, 0)
+            {
+            }
+
+            public LoadingTexture LoadingTexture;
+            public int X, Y, CorrectedWidth, CorrectedHeight;
+            public int Area;
         }
     }
 }
