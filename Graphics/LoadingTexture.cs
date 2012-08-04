@@ -18,7 +18,7 @@ namespace Gamefloor.Graphics
 
         public LoadingTexture(String filename, PaddingFill padding_fill, TexelPosition texel_position)
         {
-            if (!File.Exists(filename)) throw new FileNotFoundException();
+            if (!File.Exists(filename)) throw new FileNotFoundException(new FileNotFoundException().Message, filename);
             Init(Path.GetFileName(filename), new Bitmap(filename), padding_fill, texel_position, Color.Transparent);
         }
 
