@@ -16,10 +16,25 @@ namespace Gamefloor.Graphics
             Init(name, bitmap, padding_fill, texel_position, padding_colour);
         }
 
-        public LoadingTexture(String filename, PaddingFill padding_fill, TexelPosition texel_position)
+        public LoadingTexture(String name, Bitmap bitmap, PaddingFill padding_fill, TexelPosition texel_position)
+            : this(name, bitmap, padding_fill, texel_position, Color.Transparent)
+        {
+        }
+
+        public LoadingTexture(String name, Bitmap bitmap)
+            : this(name, bitmap, PaddingFill.Clamp, TexelPosition.Middle)
+        {
+        }
+
+        public LoadingTexture(String filename, PaddingFill padding_fill, TexelPosition texel_position, Color padding_colour)
         {
             if (!File.Exists(filename)) throw new FileNotFoundException(new FileNotFoundException().Message, filename);
-            Init(Path.GetFileName(filename), new Bitmap(filename), padding_fill, texel_position, Color.Transparent);
+            Init(Path.GetFileName(filename), new Bitmap(filename), padding_fill, texel_position, padding_colour);
+        }
+
+        public LoadingTexture(String filename, PaddingFill padding_fill, TexelPosition texel_position)
+            : this(filename, padding_fill, texel_position, Color.Transparent)
+        {
         }
 
         public LoadingTexture(String filename)
