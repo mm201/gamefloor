@@ -6,6 +6,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using Gamefloor.Support;
 using System.ComponentModel;
+using OpenTK.Graphics.OpenGL;
 
 namespace Gamefloor.Framework
 {
@@ -308,6 +309,71 @@ namespace Gamefloor.Framework
             }
         }
 
+        public void SetViewport(ViewportSizing sizing, double scale)
+        {
+            GL.Viewport(0, 0, Window.Width, Window.Height);
+            GL.LoadIdentity();
+            double x, y, w, h;
+            switch (sizing)
+            {
+                    // todo: consideration to sampling origin stuff.
+                case ViewportSizing.Pixels:
+                default:
+                    x = 0.0d;
+                    y = 0.0d;
+                    w = Window.Width * scale;
+                    h = Window.Height * scale;
+                    break;
+                case ViewportSizing.Unit:
+                    x = 0.0d;
+                    y = 0.0d;
+                    w = scale;
+                    h = scale;
+                    break;
+                case ViewportSizing.GreaterUnit:
+                    if (Window.Width > Window.Height)
+                    {
+                        x = 0.0d;
+                        y = 0.0d;
+                        w = scale;
+                        h = Window.Height * scale / Window.Width;
+                    }
+                    else
+                    {
+                        x = 0.0d;
+                        y = 0.0d;
+                        w = Window.Width * scale / Window.Height;
+                        h = scale;
+                    }
+                    break;
+                case ViewportSizing.LesserUnit:
+                    if (Window.Width > Window.Height)
+                    {
+                        x = 0.0d;
+                        y = 0.0d;
+                        w = Window.Width * scale / Window.Height;
+                        h = scale;
+                    }
+                    else
+                    {
+                        x = 0.0d;
+                        y = 0.0d;
+                        w = scale;
+                        h = Window.Height * scale / Window.Width;
+                    }
+                    break;
+            }
+            GL.Ortho(x, w - x, h - y, y, DEPTH_MIN, DEPTH_MAX);
+        }
+
+        public void SetViewport(ViewportSizing sizing)
+        {
+            SetViewport(sizing, 1.0f);
+        }
+
+        private const double DEPTH_MIN = -1.0d;
+        private const double DEPTH_MAX = 1.0d;
+
         #endregion
     }
 
@@ -316,5 +382,25 @@ namespace Gamefloor.Framework
         Unlimited = 0,
         Vsync = 1,
         Fixed = 2
+    }
+
+    public enum ViewportSizing
+    {
+        /// <summary>
+        /// Vertex coordinates correspond to screen pixels
+        /// </summary>
+        Pixels,
+        /// <summary>
+        /// Vertex coordinates are on the 0, 1 range.
+        /// </summary>
+        Unit,
+        /// <summary>
+        /// The larger axis is on the 0, 1 range, the smaller axis is scaled to fixed aspect ratio.
+        /// </summary>
+        GreaterUnit,
+        /// <summary>
+        /// The smaller axis is on the 0, 1 range, the larger axis is scaled to fixed aspect ratio
+        /// </summary>
+        LesserUnit
     }
 }
