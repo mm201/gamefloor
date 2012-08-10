@@ -59,6 +59,7 @@
     <Compile Include="Framework\GamefloorExitingException.cs" />
     <Compile Include="Support\Indexer1d.cs" />
     <Compile Include="Support\Priority.cs" />
+    <Compile Include="Support\ResolutionHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Sprites\" />
