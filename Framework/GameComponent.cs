@@ -10,7 +10,7 @@ namespace Gamefloor.Framework
     /// A GameComponent runs asyncronously and must be started and stopped.
     /// Execution of the active Mode continues while the GameComponent is running.
     /// </summary>
-    class GameComponent: IRenderable, IGameComponent
+    public class GameComponent: IRenderable, IGameComponent
     {
         #region Lifecycle
         private Game m_game;
