@@ -321,8 +321,8 @@ namespace Gamefloor.Framework
                 default:
                     x = 0.0d;
                     y = 0.0d;
-                    w = Window.Width * scale;
-                    h = Window.Height * scale;
+                    w = Window.Width / scale;
+                    h = Window.Height / scale;
                     break;
                 case ViewportSizing.Unit:
                     x = 0.0d;
@@ -335,15 +335,15 @@ namespace Gamefloor.Framework
                     {
                         x = 0.0d;
                         y = 0.0d;
-                        w = scale;
-                        h = Window.Height * scale / Window.Width;
+                        w = 1.0d / scale;
+                        h = Window.Height / scale / Window.Width;
                     }
                     else
                     {
                         x = 0.0d;
                         y = 0.0d;
-                        w = Window.Width * scale / Window.Height;
-                        h = scale;
+                        w = Window.Width / scale / Window.Height;
+                        h = 1.0d / scale;
                     }
                     break;
                 case ViewportSizing.LesserUnit:
@@ -351,15 +351,15 @@ namespace Gamefloor.Framework
                     {
                         x = 0.0d;
                         y = 0.0d;
-                        w = Window.Width * scale / Window.Height;
-                        h = scale;
+                        w = Window.Width / scale / Window.Height;
+                        h = 1.0d / scale;
                     }
                     else
                     {
                         x = 0.0d;
                         y = 0.0d;
-                        w = scale;
-                        h = Window.Height * scale / Window.Width;
+                        w = 1.0d / scale;
+                        h = Window.Height / scale / Window.Width;
                     }
                     break;
             }
