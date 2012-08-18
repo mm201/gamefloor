@@ -7,6 +7,7 @@ using OpenTK.Graphics;
 using Gamefloor.Support;
 using System.ComponentModel;
 using OpenTK.Graphics.OpenGL;
+using System.Diagnostics;
 
 namespace Gamefloor.Framework
 {
@@ -26,8 +27,8 @@ namespace Gamefloor.Framework
 
         public Game(int x, int y, int width, int height, String title, bool vsync, int fps, bool fullscreen, GraphicsMode mode, DisplayDevice display)
         {
-            m_vsync = true;// vsync;
-            m_fps = 60;// fps;
+            m_vsync = vsync;
+            m_fps = fps;
 
             Init(x, y, width, height, title, fullscreen ? GameWindowFlags.Fullscreen : GameWindowFlags.Default, mode, display ?? DisplayDevice.Default);
             m_window.WindowState = WindowState.Fullscreen;
@@ -42,10 +43,19 @@ namespace Gamefloor.Framework
             m_context = new GraphicsContext(mode, m_window.WindowInfo);
 
             m_window.Closing += window_Exiting;
+            m_window.WindowStateChanged += window_WindowStateChanged;
             SetupWindow();
             m_window.Visible = true;
         }
 
+        private GraphicsMode PreferredMode()
+        {
+            return GraphicsMode.Default;
+        }
+
+        /// <summary>
+        /// Runs the game on the current thread.
+        /// </summary>
         public void Run()
         {
             // window thread == game thread
@@ -61,7 +71,10 @@ namespace Gamefloor.Framework
 
             m_context.MakeCurrent(m_window.WindowInfo);
             m_context.LoadAll();
+            ObtainDeviceTiming();
             m_context.VSync = m_vsync;
+            m_stopwatch = Stopwatch.StartNew();
+            ResetStopwatch();
 
             try
             {
@@ -79,6 +92,10 @@ namespace Gamefloor.Framework
             // override this and place your entire game lifecycle within.
         }
 
+        /// <summary>
+        /// Runs the game on a separate thread from the window.
+        /// This mode seems to cause choppy performance.
+        /// </summary>
         public void RunAsync()
         {
             if (m_running) throw new InvalidOperationException("Game is already running");
@@ -111,6 +128,12 @@ namespace Gamefloor.Framework
         {
             // window thread
             e.Cancel = Exit();
+        }
+
+        private void window_WindowStateChanged(object sender, EventArgs e)
+        {
+            // window thread
+
         }
 
         // raised in game thread
@@ -155,6 +178,9 @@ namespace Gamefloor.Framework
         }
 
         private bool m_async;
+        /// <summary>
+        /// If true, the game/render loop is running in a separate thread from the main window thread.
+        /// </summary>
         protected bool Async
         {
             get
@@ -185,7 +211,23 @@ namespace Gamefloor.Framework
             }
             set
             {
-                //m_fps = value;
+                m_fps = value;
+                ResetStopwatch();
+            }
+        }
+
+        private bool m_vsync;
+        public bool Vsync
+        {
+            get
+            {
+                return m_vsync;
+            }
+            set
+            {
+                if (m_refresh_rate == 0) return;
+                m_vsync = value;
+                if (m_context != null) m_context.VSync = value;
             }
         }
 
@@ -199,18 +241,35 @@ namespace Gamefloor.Framework
             m_has_input = true;
         }
 
+        /// <summary>
+        /// Waits for one updatable cycle
+        /// </summary>
         public void NextFrame()
         {
-            if (m_exiting) PrepareToExit();
-
             // todo: figure out some voodoo to make multiple updates happen per render when fps > refresh rate
             // and multiple renders (or idle time, preferably) happen when fps < refresh rate.
             // at present, refresh rate overrides fps unconditionally.
-            WaitForInput();
-            UpdateComponents();
-            Render();
 
-            Context.SwapBuffers();
+            // todo: if frames are late (system lag), figure out a way to skip them.
+            // (skip if lost time is less than, say, 1 second)
+
+            NextFrameImmediate(true);
+            // idle after the frame has reached the screen to reduce input lag
+            HandleTiming();
+        }
+
+        private void NextFrameImmediate(bool render)
+        {
+            if (m_exiting) PrepareToExit();
+
+            WaitForInput();
+            UpdateComponents(); // todo: add Update Without Input event
+
+            if (render)
+            {
+                Render();
+                Context.SwapBuffers();
+            }
             // todo: replace prev input with cur input once input stuff is done
             m_has_input = false;
 
@@ -220,26 +279,81 @@ namespace Gamefloor.Framework
 
         public void Wait(int frames)
         {
+            // todo: error condition if fps is unlimited
             for (int x = 0; x < frames; x++) NextFrame();
+        }
+
+        // number of the last frame for whom an Update was performed
+        private long m_last_frame_number = 0;
+
+        // number of seconds tolerance when it'll skip ahead instead of assuming
+        // the program was suspended and picking up where it left off.
+        private const float FRAMESKIP_TIME_MAX = 1.0f;
+        // if there's only this much time before we're due for the next frame, stop processing window events
+        private const float STOP_PROCESSING_EVENTS_TIME = 0.001f;
+
+        private void HandleTiming()
+        {
+            // seconds since last frame
+            float seconds = (m_stopwatch.ElapsedTicks - FrameToTicks(m_last_frame_number)) / (float)(Stopwatch.Frequency);
+            if (seconds > FRAMESKIP_TIME_MAX)
+            {
+                ResetStopwatch();
+                return;
+            }
+            long remaining_ticks = FrameToTicks(m_last_frame_number + 1) - m_stopwatch.ElapsedTicks;
+            if (remaining_ticks <= 0)
+            {
+                m_last_frame_number++;
+                return;
+            }
+
+            long target_ticks = FrameToTicks(m_last_frame_number + 1);
+            long process_event_ticks = target_ticks - (long)(Stopwatch.Frequency * STOP_PROCESSING_EVENTS_TIME);
+            while (m_stopwatch.ElapsedTicks < target_ticks)
+            {
+                if (m_async && m_stopwatch.ElapsedTicks < process_event_ticks) m_window.ProcessEvents();
+            }
+            m_last_frame_number++;
+        }
+
+        /// <summary>
+        /// Restart timing, at the cost of slight inaccuracy.
+        /// </summary>
+        private void ResetStopwatch()
+        {
+            if (m_stopwatch == null) return;
+            m_last_frame_number = -1;
+            m_stopwatch.Reset();
+            m_stopwatch.Start();
+        }
+
+        private long FrameToTicks(long frame)
+        {
+            return frame * Stopwatch.Frequency / m_fps;
+        }
+
+        private long TicksToFrame(long ticks)
+        {
+            return ticks * m_fps / Stopwatch.Frequency;
+        }
+
+        private int m_refresh_rate = -1;
+        private Stopwatch m_stopwatch;
+
+        private void ObtainDeviceTiming()
+        {
+            m_refresh_rate = ResolutionHelper.GetCurrentRefreshRate();
+            if (m_refresh_rate == 0)
+            {
+                m_vsync = false;
+                if (m_context != null) m_context.VSync = false;
+            }
         }
 
         public void ProcessEvents()
         {
             m_window.ProcessEvents();
-        }
-
-        private bool m_vsync;
-        public bool Vsync
-        {
-            get
-            {
-                return m_vsync;
-            }
-            set
-            {
-                //m_vsync = value;
-                //if (m_context != null) m_context.VSync = value;
-            }
         }
 
         #endregion
