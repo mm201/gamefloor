@@ -33,6 +33,24 @@ namespace Gamefloor.Graphics
 
         public TextureAtlas Build(Game game)
         {
+            Bitmap b;
+            List<TextureInfo> elements;
+
+            InnerBuild(out b, out elements);
+            return new TextureAtlas(b, game, elements);
+        }
+
+        public Bitmap GetBitmap()
+        {
+            Bitmap b;
+            List<TextureInfo> elements;
+
+            InnerBuild(out b, out elements);
+            return b;
+        }
+
+        private void InnerBuild(out Bitmap b, out List<TextureInfo> elements)
+        {
             // really naive algorithm for now: just stack all of them horizontally
 
             int max_height = 0;
@@ -43,12 +61,12 @@ namespace Gamefloor.Graphics
                 width += l.Bitmap.Width;
             }
 
-            Bitmap b = new Bitmap(width, max_height);
+            b = new Bitmap(width, max_height);
             System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(b);
             g.Clear(Color.Transparent);
 
             int progress = 0;
-            List<TextureInfo> elements = new List<TextureInfo>(m_textures.Count);
+            elements = new List<TextureInfo>(m_textures.Count);
 
             foreach (LoadingTexture l in m_textures)
             {
@@ -56,8 +74,6 @@ namespace Gamefloor.Graphics
                 elements.Add(new TextureInfo(l.Name, (double)progress / width, 0, (double)(progress + l.Bitmap.Width) / width, (double)(l.Bitmap.Height) / (double)max_height, l.Bitmap.Width, l.Bitmap.Height, l.PaddingFill, l.TexelPosition, l.PaddingColour));
                 progress += l.Bitmap.Width;
             }
-
-            return new TextureAtlas(b, game, elements);
         }
 
         private void MakeAdjacentBorder(System.Drawing.Graphics dest, Bitmap src, int x, int y)
@@ -80,9 +96,9 @@ namespace Gamefloor.Graphics
             }
         }
 
-        private struct IntermediateTexture
+        private struct PlacingTexture
         {
-            public IntermediateTexture(LoadingTexture loading_texture, int x, int y)
+            public PlacingTexture(LoadingTexture loading_texture, int x, int y)
             {
                 this.LoadingTexture = loading_texture;
                 X = x;
@@ -92,7 +108,7 @@ namespace Gamefloor.Graphics
                 Area = CorrectedWidth * CorrectedHeight;
             }
 
-            public IntermediateTexture(LoadingTexture loading_texture)
+            public PlacingTexture(LoadingTexture loading_texture)
                 : this(loading_texture, 0, 0)
             {
             }
