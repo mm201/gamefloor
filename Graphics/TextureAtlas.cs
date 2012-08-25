@@ -68,7 +68,7 @@ namespace Gamefloor.Graphics
         /// </summary>
         Shrink,
         /// <summary>
-        /// The entire top and left borders are visible, but none of the bottom or right. Texels scale 1:1.
+        /// The entire bottom and right borders are visible, but none of the top or left. Texels scale 1:1.
         /// </summary>
         TopLeft,
         /// <summary>

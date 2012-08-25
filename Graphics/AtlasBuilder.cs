@@ -51,34 +51,66 @@ namespace Gamefloor.Graphics
 
         private void InnerBuild(out Bitmap b, out List<TextureInfo> elements)
         {
-            // really naive algorithm for now: just stack all of them horizontally
+            List<PlacingTexture> placings = new List<PlacingTexture>(m_textures.Count);
 
-            int max_height = 0;
-            int width = 0;
-            foreach (LoadingTexture l in m_textures)
-            {
-                max_height = Math.Max(max_height, l.Bitmap.Height);
-                width += l.Bitmap.Width;
-            }
+            int width, height;
+            placings = PlaceAllTextures(out width, out height);
 
-            b = new Bitmap(width, max_height);
+            b = new Bitmap(width, height);
             System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(b);
             g.Clear(Color.Transparent);
-
-            int progress = 0;
             elements = new List<TextureInfo>(m_textures.Count);
 
-            foreach (LoadingTexture l in m_textures)
+            foreach (PlacingTexture p in placings)
             {
-                g.DrawImage(l.Bitmap, new Rectangle(progress, 0, l.Bitmap.Width, l.Bitmap.Height));
-                elements.Add(new TextureInfo(l.Name, (double)progress / width, 0, (double)(progress + l.Bitmap.Width) / width, (double)(l.Bitmap.Height) / (double)max_height, l.Bitmap.Width, l.Bitmap.Height, l.PaddingFill, l.TexelPosition, l.PaddingColour));
-                progress += l.Bitmap.Width;
+                DrawPlacingTexture(g, p);
+                elements.Add(p.ToTextureInfo(width, height));
             }
         }
 
-        private void MakeAdjacentBorder(System.Drawing.Graphics dest, Bitmap src, int x, int y)
+        private List<PlacingTexture> PlaceAllTextures(out int width, out int height)
         {
+            List<PlacingTexture> result = new List<PlacingTexture>(m_textures.Count);
+            long pixelcount = 0;
+            int max_width = 0;
+            int max_height = 0;
+
+            foreach (LoadingTexture l in m_textures)
+            {
+                PlacingTexture p = new PlacingTexture(l);
+                max_width = Math.Max(max_width, p.CorrectedWidth);
+                max_height = Math.Max(max_height, p.CorrectedHeight);
+                pixelcount += p.Area;
+                result.Add(p);
+            }
+
+            int width_sum = 0;
+            // same naive algorithm, new place
+            for (int x = 0; x < result.Count; x++)
+            {
+                PlacingTexture p = result[x];
+                p.X = width_sum;
+                width_sum += p.CorrectedWidth;
+                result[x] = p;
+            }
+
+            width = width_sum;
+            height = max_height;
+
+            return result;
         }
+
+        private void DrawPlacingTexture(System.Drawing.Graphics g, PlacingTexture p)
+        {
+            bool draw_topleft_margin = p.LoadingTexture.PaddingFill != PaddingFill.None && p.LoadingTexture.TexelPosition != TexelPosition.Stretch && p.LoadingTexture.TexelPosition != TexelPosition.TopLeft;
+            bool draw_bottomright_margin = p.LoadingTexture.PaddingFill != PaddingFill.None && p.LoadingTexture.TexelPosition != TexelPosition.Stretch;
+
+            int offset_topleft = draw_topleft_margin ? 1 : 0;
+            // draw the actual texture
+            g.DrawImage(p.LoadingTexture.Bitmap, p.X + offset_topleft, p.Y + offset_topleft, p.LoadingTexture.Bitmap.Width, p.LoadingTexture.Bitmap.Height);
+
+        }
+
 
         private List<LoadingTexture> m_textures;
 
@@ -103,9 +135,24 @@ namespace Gamefloor.Graphics
                 this.LoadingTexture = loading_texture;
                 X = x;
                 Y = y;
-                CorrectedWidth = loading_texture.PaddingFill == PaddingFill.None ? loading_texture.Bitmap.Width : loading_texture.Bitmap.Width + 2;
-                CorrectedHeight = loading_texture.PaddingFill == PaddingFill.None ? loading_texture.Bitmap.Height : loading_texture.Bitmap.Height + 2;
-                Area = CorrectedWidth * CorrectedHeight;
+
+                if (loading_texture.PaddingFill == PaddingFill.None || loading_texture.TexelPosition == TexelPosition.Shrink)
+                {
+                    CorrectedWidth = loading_texture.Bitmap.Width;
+                    CorrectedHeight = loading_texture.Bitmap.Height;
+                }
+                else if (loading_texture.TexelPosition == TexelPosition.TopLeft)
+                {
+                    CorrectedWidth = loading_texture.Bitmap.Width + 1;
+                    CorrectedHeight = loading_texture.Bitmap.Height + 1;
+                }
+                else
+                {
+                    CorrectedWidth = loading_texture.Bitmap.Width + 2;
+                    CorrectedHeight = loading_texture.Bitmap.Height + 2;
+                }
+
+                Area = (long)CorrectedWidth * (long)CorrectedHeight;
             }
 
             public PlacingTexture(LoadingTexture loading_texture)
@@ -115,7 +162,47 @@ namespace Gamefloor.Graphics
 
             public LoadingTexture LoadingTexture;
             public int X, Y, CorrectedWidth, CorrectedHeight;
-            public int Area;
+            public long Area;
+
+            public TextureInfo ToTextureInfo(int atlas_width, int atlas_height)
+            {
+                bool draw_topleft_margin = this.LoadingTexture.PaddingFill != PaddingFill.None && this.LoadingTexture.TexelPosition != TexelPosition.Stretch && this.LoadingTexture.TexelPosition != TexelPosition.TopLeft;
+                int margin_offset_topleft = draw_topleft_margin ? 1 : 0;
+
+                double offset_topleft, offset_bottomright;
+                switch (this.LoadingTexture.TexelPosition)
+                {
+                    // todo: code for texel origin other than center
+                    case TexelPosition.Shrink:
+                        offset_topleft = this.LoadingTexture.PaddingFill == PaddingFill.None ?
+                                         -0.5 : 0.5;
+                        offset_bottomright = this.LoadingTexture.PaddingFill == PaddingFill.None ?
+                                             0.5 : 1.5;
+                        break;
+                    case TexelPosition.Stretch:
+                        offset_topleft = 0.5;
+                        offset_bottomright = -0.5;
+                        break;
+                    case TexelPosition.Middle:
+                        offset_topleft = this.LoadingTexture.PaddingFill == PaddingFill.None ?
+                                         0 : 1;
+                        offset_bottomright = this.LoadingTexture.PaddingFill == PaddingFill.None ?
+                                             0 : 1;
+                        break;
+                    case TexelPosition.TopLeft:
+                        offset_topleft = 0.5;
+                        offset_bottomright = 0.5;
+                        break;
+                    default:
+                        throw new ArgumentException();
+                }
+
+                return new TextureInfo(this.LoadingTexture.Name,
+                    (X + offset_topleft) / atlas_width, (Y + offset_topleft) / atlas_height,
+                    (X + this.LoadingTexture.Bitmap.Width + offset_bottomright) / atlas_width, (Y + this.LoadingTexture.Bitmap.Height + offset_bottomright) / atlas_height,
+                    this.LoadingTexture.Bitmap.Width, this.LoadingTexture.Bitmap.Height,
+                    this.LoadingTexture.PaddingFill, this.LoadingTexture.TexelPosition, this.LoadingTexture.PaddingColour);
+            }
         }
     }
 }
