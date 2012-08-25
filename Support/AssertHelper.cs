@@ -31,6 +31,11 @@ namespace Gamefloor.Support
             Debug.Assert(condition, message);
         }
 
+        public static void Assert(bool condition)
+        {
+            Assert(condition, "Assert failed.");
+        }
+
         public static void Unreachable()
         {
             Assert(false, "Unreachable code has been reached.");

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
 using Gamefloor.Framework;
+using Gamefloor.Support;
 
 namespace Gamefloor.Graphics
 {
@@ -59,6 +60,7 @@ namespace Gamefloor.Graphics
             b = new Bitmap(width, height);
             System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(b);
             g.Clear(Color.Transparent);
+            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
             elements = new List<TextureInfo>(m_textures.Count);
 
             foreach (PlacingTexture p in placings)
@@ -109,6 +111,92 @@ namespace Gamefloor.Graphics
             // draw the actual texture
             g.DrawImage(p.LoadingTexture.Bitmap, p.X + offset_topleft, p.Y + offset_topleft, p.LoadingTexture.Bitmap.Width, p.LoadingTexture.Bitmap.Height);
 
+            switch (p.LoadingTexture.PaddingFill)
+            {
+                case PaddingFill.Wrap:
+                    if (draw_topleft_margin)
+                    {
+                        // left
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X, p.Y + 1, 1, p.LoadingTexture.Bitmap.Height), new Rectangle(p.LoadingTexture.Bitmap.Width - 1, 0, 1, p.LoadingTexture.Bitmap.Height), GraphicsUnit.Pixel);
+                        // top
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X + 1, p.Y, p.LoadingTexture.Bitmap.Width, 1), new Rectangle(0, p.LoadingTexture.Bitmap.Height - 1, p.LoadingTexture.Bitmap.Width, 1), GraphicsUnit.Pixel);
+                        // topleft pixel
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X, p.Y, 1, 1), new Rectangle(p.LoadingTexture.Bitmap.Width - 1, p.LoadingTexture.Bitmap.Height - 1, 1, 1), GraphicsUnit.Pixel);
+
+                        AssertHelper.Assert(draw_bottomright_margin);
+                        // bottomleft pixel
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X, p.Y + p.LoadingTexture.Bitmap.Height + 1, 1, 1), new Rectangle(p.LoadingTexture.Bitmap.Width - 1, 0, 1, 1), GraphicsUnit.Pixel);
+                        // topright pixel
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X + p.LoadingTexture.Bitmap.Width + 1, p.Y, 1, 1), new Rectangle(0, p.LoadingTexture.Bitmap.Height - 1, 1, 1), GraphicsUnit.Pixel);
+                    }
+
+                    if (draw_bottomright_margin)
+                    {
+                        // right
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X + p.LoadingTexture.Bitmap.Width + offset_topleft, p.Y + offset_topleft, 1, p.LoadingTexture.Bitmap.Height), new Rectangle(0, 0, 1, p.LoadingTexture.Bitmap.Height), GraphicsUnit.Pixel);
+                        // bottom
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X + offset_topleft, p.Y + p.LoadingTexture.Bitmap.Height + offset_topleft, p.LoadingTexture.Bitmap.Width, 1), new Rectangle(0, 0, p.LoadingTexture.Bitmap.Width, 1), GraphicsUnit.Pixel);
+                        // bottomright pixel
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X + p.LoadingTexture.Bitmap.Width + offset_topleft, p.Y + p.LoadingTexture.Bitmap.Height + offset_topleft, 1, 1), new Rectangle(0, 0, 1, 1), GraphicsUnit.Pixel);
+                    }
+                    break;
+                case PaddingFill.Clamp:
+                    if (draw_topleft_margin)
+                    {
+                        // left
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X, p.Y + 1, 1, p.LoadingTexture.Bitmap.Height), new Rectangle(0, 0, 1, p.LoadingTexture.Bitmap.Height), GraphicsUnit.Pixel);
+                        // top
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X + 1, p.Y, p.LoadingTexture.Bitmap.Width, 1), new Rectangle(0, 0, p.LoadingTexture.Bitmap.Width, 1), GraphicsUnit.Pixel);
+                        // topleft pixel
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X, p.Y, 1, 1), new Rectangle(0, 0, 1, 1), GraphicsUnit.Pixel);
+
+                        AssertHelper.Assert(draw_bottomright_margin);
+                        // bottomleft pixel
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X, p.Y + p.LoadingTexture.Bitmap.Height + 1, 1, 1), new Rectangle(0, p.LoadingTexture.Bitmap.Height - 1, 1, 1), GraphicsUnit.Pixel);
+                        // topright pixel
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X + p.LoadingTexture.Bitmap.Width + 1, p.Y, 1, 1), new Rectangle(p.LoadingTexture.Bitmap.Width - 1, 0, 1, 1), GraphicsUnit.Pixel);
+                    }
+
+                    if (draw_bottomright_margin)
+                    {
+                        // right
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X + p.LoadingTexture.Bitmap.Width + offset_topleft, p.Y + offset_topleft, 1, p.LoadingTexture.Bitmap.Height), new Rectangle(p.LoadingTexture.Bitmap.Width - 1, 0, 1, p.LoadingTexture.Bitmap.Height), GraphicsUnit.Pixel);
+                        // bottom
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X + offset_topleft, p.Y + p.LoadingTexture.Bitmap.Height + offset_topleft, p.LoadingTexture.Bitmap.Width, 1), new Rectangle(0, p.LoadingTexture.Bitmap.Height - 1, p.LoadingTexture.Bitmap.Width, 1), GraphicsUnit.Pixel);
+                        // bottomright pixel
+                        g.DrawImage(p.LoadingTexture.Bitmap, new Rectangle(p.X + p.LoadingTexture.Bitmap.Width + offset_topleft, p.Y + p.LoadingTexture.Bitmap.Height + offset_topleft, 1, 1), new Rectangle(p.LoadingTexture.Bitmap.Width - 1, p.LoadingTexture.Bitmap.Height - 1, 1, 1), GraphicsUnit.Pixel);
+                    }
+                    break;
+                case PaddingFill.Solid:
+                    Brush brush = new SolidBrush(p.LoadingTexture.PaddingColour);
+
+                    if (draw_topleft_margin)
+                    {
+                        // left
+                        g.FillRectangle(brush, new Rectangle(p.X, p.Y + 1, 1, p.LoadingTexture.Bitmap.Height));
+                        // top
+                        g.FillRectangle(brush, new Rectangle(p.X + 1, p.Y, p.LoadingTexture.Bitmap.Width, 1));
+                        // topleft pixel
+                        g.FillRectangle(brush, new Rectangle(p.X, p.Y, 1, 1));
+
+                        AssertHelper.Assert(draw_bottomright_margin);
+                        // bottomleft pixel
+                        g.FillRectangle(brush, new Rectangle(p.X, p.Y + p.LoadingTexture.Bitmap.Height + 1, 1, 1));
+                        // topright pixel
+                        g.FillRectangle(brush, new Rectangle(p.X + p.LoadingTexture.Bitmap.Width + 1, p.Y, 1, 1));
+                    }
+
+                    if (draw_bottomright_margin)
+                    {
+                        // right
+                        g.FillRectangle(brush, new Rectangle(p.X + p.LoadingTexture.Bitmap.Width + offset_topleft, p.Y + offset_topleft, 1, p.LoadingTexture.Bitmap.Height));
+                        // bottom
+                        g.FillRectangle(brush, new Rectangle(p.X + offset_topleft, p.Y + p.LoadingTexture.Bitmap.Height + offset_topleft, p.LoadingTexture.Bitmap.Width, 1));
+                        // bottomright pixel
+                        g.FillRectangle(brush, new Rectangle(p.X + p.LoadingTexture.Bitmap.Width + offset_topleft, p.Y + p.LoadingTexture.Bitmap.Height + offset_topleft, 1, 1));
+                    }
+                    break;
+            }
         }
 
 
