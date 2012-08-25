@@ -72,6 +72,9 @@ namespace Gamefloor.Graphics
 
         private List<PlacingTexture> PlaceAllTextures(out int width, out int height)
         {
+            // Divides space using a binary tree and places textures in nodes containing enough room.
+            // http://www.blackpawn.com/texts/lightmaps/
+
             List<PlacingTexture> result = new List<PlacingTexture>(m_textures.Count);
             long pixelcount = 0;
             int max_width = 0;
@@ -86,18 +89,94 @@ namespace Gamefloor.Graphics
                 result.Add(p);
             }
 
-            int width_sum = 0;
-            // same naive algorithm, new place
+            int min_width = Math.Max(max_width, MinWidth);
+            int min_height = Math.Max(max_height, MinHeight);
+            int guess_width, guess_height;
+            if (MinWidth == 0 && MinHeight == 0)
+            {
+                guess_width = (int)(Math.Sqrt(pixelcount * 2.0d) + 1);
+                guess_height = Math.Max(min_height, guess_width);
+                guess_width = Math.Max(min_width, guess_width);
+            }
+            else if (MinWidth == 0)
+            {
+                guess_width = Math.Max((int)(pixelcount / min_height), min_width);
+                guess_height = min_height;
+            }
+            else if (MinHeight == 0)
+            {
+                guess_width = min_width;
+                guess_height = Math.Max((int)(pixelcount / MinWidth), min_height);
+            }
+            else
+            {
+                guess_width = min_width;
+                guess_height = min_height;
+            }
+
+            int real_max_width = MaxWidth;
+            int real_max_height = MaxHeight;
+
+            if (RequirePot)
+            {
+                guess_width = 1 << (MathHelper.Log2(guess_width));
+                guess_height = 1 << (MathHelper.Log2(guess_height));
+
+                real_max_width = 1 << (MathHelper.Log2(MaxWidth));
+                real_max_height = 1 << (MathHelper.Log2(MaxHeight));
+            }
+
+            if (guess_width == 0) guess_width = guess_height;
+            if (guess_width == 0)
+            {
+                guess_width = 512;
+                guess_height = 512;
+            }
+
+            PlacingNode root = new PlacingNode(0, 0, guess_width, guess_height);
             for (int x = 0; x < result.Count; x++)
             {
                 PlacingTexture p = result[x];
-                p.X = width_sum;
-                width_sum += p.CorrectedWidth;
+                PlacingNode node = root.FindPlacement(p);
+                if (node == null)
+                {
+                    if (guess_width <= guess_height && (guess_width < real_max_width || real_max_width == 0))
+                        guess_width = 1 << (MathHelper.Log2(guess_width) + 1);
+                    else if (guess_height < real_max_height || real_max_height == 0)
+                        guess_height = 1 << (MathHelper.Log2(guess_height) + 1);
+                    else if (guess_width < real_max_width || real_max_width == 0)
+                        guess_width = 1 << (MathHelper.Log2(guess_width) + 1);
+                    else
+                        throw new Exception("No room left to place textures.");
+
+                    AssertHelper.Assert(guess_width > root.width || guess_height > root.height);
+                    PlacingNode new_root = new PlacingNode(guess_width, guess_height);
+                    if (guess_width > root.width)
+                    {
+                        AssertHelper.Assert(guess_height == root.height);
+                        new_root.first = root;
+                        new_root.second = new PlacingNode(root.width, 0, guess_width - root.width, root.height);
+                    }
+                    else
+                    {
+                        AssertHelper.Assert(guess_width == root.width);
+                        new_root.first = root;
+                        new_root.second = new PlacingNode(0, root.height, root.width, guess_height - root.height);
+                    }
+                    root = new_root;
+
+                    x--;
+                    continue;
+                }
+
+                node.Place(p);
+                p.X = node.x;
+                p.Y = node.y;
                 result[x] = p;
             }
 
-            width = width_sum;
-            height = max_height;
+            width = root.width;
+            height = root.height;
 
             return result;
         }
@@ -199,7 +278,6 @@ namespace Gamefloor.Graphics
             }
         }
 
-
         private List<LoadingTexture> m_textures;
 
         public bool RequirePot { get; set; }
@@ -292,5 +370,107 @@ namespace Gamefloor.Graphics
                     this.LoadingTexture.PaddingFill, this.LoadingTexture.TexelPosition, this.LoadingTexture.PaddingColour);
             }
         }
+
+        private class PlacingNode
+        {
+            public int x, y;
+            public int width, height;
+            public PlacingTexture ? occupant = null; // null if has children
+            public PlacingNode first = null, second = null; // null if has occupant
+            // (if all of these are null this node is untaken)
+
+            public PlacingNode(int _x, int _y, int _width, int _height)
+            {
+                x = _x;
+                y = _y;
+                width = _width;
+                height = _height;
+            }
+
+            public PlacingNode(int _width, int _height) : this(0, 0, _width, _height)
+            {
+            }
+
+            public PlacingNode FindPlacement(PlacingTexture p)
+            {
+                // finds the best spot to put this texture, returns it.
+                // returns null if this texture can't fit.
+                if (occupant != null) return null;
+                if (first != null)
+                {
+                    PlacingNode n1 = first.FindPlacement(p);
+                    PlacingNode n2 = second.FindPlacement(p);
+
+                    if (n1 == null) return n2;
+                    return n1;
+                }
+                else
+                {
+                    if (width < p.CorrectedWidth || height < p.CorrectedHeight) return null;
+                    return this;
+                }
+            }
+
+            public void SplitX(int width_left)
+            {
+                if (occupant != null || first != null) throw new InvalidOperationException();
+                if (width_left >= width || width_left <= 0) throw new InvalidOperationException();
+
+                first = new PlacingNode(x, y, width_left, height);
+                second = new PlacingNode(x + width_left, y, width - width_left, height);
+            }
+
+            public void SplitY(int height_left)
+            {
+                if (occupant != null || first != null) throw new InvalidOperationException();
+                if (height_left >= height || height_left <= 0) throw new InvalidOperationException();
+
+                first = new PlacingNode(x, y, width, height_left);
+                second = new PlacingNode(x, y + height_left, width, height - height_left);
+            }
+
+            public void Place(PlacingTexture p)
+            {
+                if (occupant != null || first != null) throw new InvalidOperationException();
+                if (p.CorrectedWidth > width || p.CorrectedHeight > height) throw new InvalidOperationException();
+
+                if (p.CorrectedWidth == width)
+                {
+                    if (p.CorrectedHeight == height)
+                    {
+                        occupant = p;
+                    }
+                    else
+                    {
+                        SplitY(p.CorrectedHeight);
+                        first.Place(p);
+                    }
+                }
+                else
+                {
+                    if (p.CorrectedHeight == height)
+                    {
+                        SplitX(p.CorrectedWidth);
+                        first.Place(p);
+                    }
+                    else
+                    {
+                        int diff_w = width - p.CorrectedWidth;
+                        int diff_h = height - p.CorrectedHeight;
+                        if (diff_w >= diff_h)
+                        {
+                            SplitX(p.CorrectedWidth);
+                            first.Place(p);
+                        }
+                        else
+                        {
+                            SplitY(p.CorrectedHeight);
+                            first.Place(p);
+                        }
+                    }
+                }
+            }
+        }
+
     }
 }

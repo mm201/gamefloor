@@ -58,6 +58,7 @@
     <Compile Include="Support\GamefloorException.cs" />
     <Compile Include="Framework\GamefloorExitingException.cs" />
     <Compile Include="Support\Indexer1d.cs" />
+    <Compile Include="Support\MathHelper.cs" />
     <Compile Include="Support\Priority.cs" />
     <Compile Include="Support\ResolutionHelper.cs" />
   </ItemGroup>
