@@ -52,10 +52,8 @@ namespace Gamefloor.Graphics
 
         private void InnerBuild(out Bitmap b, out List<TextureInfo> elements)
         {
-            List<PlacingTexture> placings = new List<PlacingTexture>(m_textures.Count);
-
             int width, height;
-            placings = PlaceAllTextures(out width, out height);
+            List<PlacingTexture> placings = PlaceAllTextures(out width, out height);
 
             b = new Bitmap(width, height);
             System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(b);
@@ -79,6 +77,7 @@ namespace Gamefloor.Graphics
             long pixelcount = 0;
             int max_width = 0;
             int max_height = 0;
+            int y = 0;
 
             foreach (LoadingTexture l in m_textures)
             {
@@ -86,8 +85,13 @@ namespace Gamefloor.Graphics
                 max_width = Math.Max(max_width, p.CorrectedWidth);
                 max_height = Math.Max(max_height, p.CorrectedHeight);
                 pixelcount += p.Area;
+                p.index = y;
                 result.Add(p);
+                y++;
             }
+
+            // sort by area descending
+            result.Sort((p, q) => q.Area.CompareTo(p.Area));
 
             int min_width = Math.Max(max_width, MinWidth);
             int min_height = Math.Max(max_height, MinHeight);
@@ -177,6 +181,7 @@ namespace Gamefloor.Graphics
 
             width = root.width;
             height = root.height;
+            result.Sort((p, q) => p.index.CompareTo(q.index));
 
             return result;
         }
@@ -296,7 +301,7 @@ namespace Gamefloor.Graphics
 
         private struct PlacingTexture
         {
-            public PlacingTexture(LoadingTexture loading_texture, int x, int y)
+            public PlacingTexture(LoadingTexture loading_texture, int x, int y, int _index)
             {
                 this.LoadingTexture = loading_texture;
                 X = x;
@@ -319,16 +324,18 @@ namespace Gamefloor.Graphics
                 }
 
                 Area = (long)CorrectedWidth * (long)CorrectedHeight;
+                index = _index;
             }
 
             public PlacingTexture(LoadingTexture loading_texture)
-                : this(loading_texture, 0, 0)
+                : this(loading_texture, 0, 0, 0)
             {
             }
 
             public LoadingTexture LoadingTexture;
             public int X, Y, CorrectedWidth, CorrectedHeight;
             public long Area;
+            public int index;
 
             public TextureInfo ToTextureInfo(int atlas_width, int atlas_height)
             {
