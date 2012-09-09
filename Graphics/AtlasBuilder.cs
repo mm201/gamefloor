@@ -406,9 +406,8 @@ namespace Gamefloor.Graphics
                 if (first != null)
                 {
                     PlacingNode n1 = first.FindPlacement(p);
-                    PlacingNode n2 = second.FindPlacement(p);
 
-                    if (n1 == null) return n2;
+                    if (n1 == null) return second.FindPlacement(p);
                     return n1;
                 }
                 else
