@@ -44,7 +44,7 @@ namespace Gamefloor.Framework
         #endregion
 
         #region IRenderable implementation
-        public virtual void Render(IGraphicsContext context)
+        public virtual void Render(IGraphicsContext context, bool reverse)
         {
         }
 
@@ -53,6 +53,14 @@ namespace Gamefloor.Framework
             get
             {
                 return new Priority(0, 0, 0, 0);
+            }
+        }
+
+        public virtual bool Reversible
+        {
+            get
+            {
+                return false;
             }
         }
         #endregion

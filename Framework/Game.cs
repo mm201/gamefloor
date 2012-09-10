@@ -419,7 +419,7 @@ namespace Gamefloor.Framework
             }
             foreach (IRenderable r in m_renderables)
             {
-                r.Render(Context);
+                r.Render(Context, false);
             }
         }
 
