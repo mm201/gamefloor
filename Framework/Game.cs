@@ -410,14 +410,15 @@ namespace Gamefloor.Framework
             AssertHelper.Assert(m_renderables != null, "Game.m_renderables is null.");
             if (m_renderables == null) return;
 
-            m_renderables.Sort((x, y) => (x.DrawOrder.CompareTo(y.DrawOrder)));
+            List<IRenderable> renderables = new List<IRenderable>(m_renderables);
+            renderables.Sort((x, y) => (x.DrawOrder.CompareTo(y.DrawOrder)));
             m_context.MakeCurrent(m_window.WindowInfo);
             if (!m_loaded)
             {
                 m_context.LoadAll();
                 m_loaded = true;
             }
-            foreach (IRenderable r in m_renderables)
+            foreach (IRenderable r in renderables)
             {
                 r.Render(Context, false);
             }
