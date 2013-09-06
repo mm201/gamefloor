@@ -410,6 +410,7 @@ namespace Gamefloor.Framework
             AssertHelper.Assert(m_renderables != null, "Game.m_renderables is null.");
             if (m_renderables == null) return;
 
+            // todo: cache this somehow by detecting changes in the m_renderables collection
             List<IRenderable> renderables = new List<IRenderable>(m_renderables);
             renderables.Sort((x, y) => (x.DrawOrder.CompareTo(y.DrawOrder)));
             m_context.MakeCurrent(m_window.WindowInfo);

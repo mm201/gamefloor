@@ -53,6 +53,10 @@
     <Compile Include="Graphics\TextureInfo.cs" />
     <Compile Include="Graphics\TextureAtlas.cs" />
     <Compile Include="Graphics\AtlasBuilder.cs" />
+    <Compile Include="Sprites\RotozoomSprite.cs" />
+    <Compile Include="Sprites\Sprite.cs" />
+    <Compile Include="Sprites\SpriteCollection.cs" />
+    <Compile Include="Sprites\CustomSprite.cs" />
     <Compile Include="Support\AssertHelper.cs" />
     <Compile Include="Support\Common.cs" />
     <Compile Include="Support\GamefloorException.cs" />
@@ -62,9 +66,7 @@
     <Compile Include="Support\Priority.cs" />
     <Compile Include="Support\ResolutionHelper.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Sprites\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

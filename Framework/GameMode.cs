@@ -63,6 +63,14 @@ namespace Gamefloor.Framework
                 return false;
             }
         }
+
+        public virtual bool DrawFirst
+        {
+            get
+            {
+                return false;
+            }
+        }
         #endregion
 
         #region IGameComponent implementation
